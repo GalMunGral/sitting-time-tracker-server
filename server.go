@@ -4,6 +4,7 @@ import (
   "net/http"
   "fmt"
   "strings"
+  "encoding/json"
   "database/sql"
   _ "github.com/go-sql-driver/mysql"
 )
@@ -13,23 +14,27 @@ var db *sql.DB
 func test(w http.ResponseWriter, r *http.Request) {
   query := r.URL.Query()
   id := strings.Join(query["id"], "")
+  type Record struct {
+    Start string `json: "start"`
+    End string `json: "end"`
+  }
 
-  var (
-    start string
-    end string
-  )
   rows, err := db.Query("select start_time, end_time from records where user_id = ?", id)
   if err != nil { panic(err) }
   defer rows.Close()
+
+  var records []Record
+  var start string
+  var end string
   for rows.Next() {
-  	err := rows.Scan(&start, &end)
-  	if err != nil { panic(err) }
-    fmt.Printf("%s, %s\n", start, end);
+  	if err := rows.Scan(&start, &end); err != nil { panic(err) }
+    records = append(records, Record{Start: start, End: end})
   }
   if rows.Err() != nil { panic(err) }
-  
-  message := start + " => " + end + "\n"
-  w.Write([]byte(message))
+
+  ob, err := json.Marshal(records)
+  if err != nil { panic(err) }
+  w.Write(ob)
 }
 
 func main() {
