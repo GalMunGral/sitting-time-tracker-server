@@ -50,12 +50,19 @@ func login(w http.ResponseWriter, r *http.Request) {
     return
   }
   if !rows.Next() {
-    fmt.Println("Invalid credentials")
+    msg := map[string]interface{} {
+      "success": false,
+      "error": "Invalid Credentials",
+    }
+    ob, _ := json.Marshal(msg)
+    w.Write(ob)
     return
   }
   // Create JWT token
+  fmt.Println("uid >> ", uid)
   token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
     "uid": uid,
+    "test": "something",
   })
   str, err := token.SignedString([]byte("test-test"))
   w.Write([]byte(str))
@@ -69,6 +76,7 @@ func register(w http.ResponseWriter, r *http.Request) {
     panic(err)
   }
   uid := int(body["uid"].(float64))
+  fmt.Println("uid <-", uid)
   password, ok := body["password"].(string)
   if !ok {
     w.Write([]byte("No password"))
@@ -89,6 +97,18 @@ func register(w http.ResponseWriter, r *http.Request) {
     return
   }
   w.Write([]byte("Success!"))
+}
+
+func verifyToken(w http.ResponseWriter, r *http.Request) {
+  query := r.URL.Query()
+  tokenString := strings.Join(query["token"], "")
+  token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+    return []byte("test-test"), nil
+  })
+  if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+    uid := int(claims["uid"].(float64))
+    fmt.Println("VERIFIED: ", uid)
+  }
 }
 
 func test(w http.ResponseWriter, r *http.Request) {
@@ -125,6 +145,7 @@ func main() {
   http.HandleFunc("/test", test)
   http.HandleFunc("/register", register)
   http.HandleFunc("/login", login)
+  http.HandleFunc("/verify-token", verifyToken)
 
   if err = http.ListenAndServe(":8080", nil); err != nil {
     panic(err)
