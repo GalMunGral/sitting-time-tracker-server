@@ -9,10 +9,57 @@ import (
   "encoding/json"
   "database/sql"
   _ "github.com/go-sql-driver/mysql"
+  jwt "github.com/dgrijalva/jwt-go"
 )
 
 var db *sql.DB
 var ctx = context.Background()
+
+type Record struct {
+  Start string `json: "start"`
+  End string `json: "end"`
+}
+
+// Expects `uid` and `password` from request body
+// Sends back generated JWT token
+func login(w http.ResponseWriter, r *http.Request) {
+  var buffer [255]byte
+  var body map[string]interface{}
+  len, _ := r.Body.Read(buffer[:])
+  if err:= json.Unmarshal(buffer[:len], &body); err != nil {
+    panic(err)
+  }
+  uid := int(body["uid"].(float64))
+  password, ok := body["password"].(string)
+  if !ok {
+    w.Write([]byte("No password"))
+    return
+  }
+  stmt, err := db.PrepareContext(ctx, "SELECT * FROM users WHERE uid = ? AND password = ?")
+  if err != nil {
+    panic(err)
+  }
+  rows, err := stmt.Query(uid, password)
+  if err != nil {
+    msg := map[string]interface{} {
+      "success": false,
+      "error": err.Error(),
+    }
+    ob, _ := json.Marshal(msg)
+    w.Write(ob)
+    return
+  }
+  if !rows.Next() {
+    fmt.Println("Invalid credentials")
+    return
+  }
+  // Create JWT token
+  token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+    "uid": uid,
+  })
+  str, err := token.SignedString([]byte("test-test"))
+  w.Write([]byte(str))
+}
 
 func register(w http.ResponseWriter, r *http.Request) {
   var buffer [255]byte
@@ -43,13 +90,10 @@ func register(w http.ResponseWriter, r *http.Request) {
   }
   w.Write([]byte("Success!"))
 }
+
 func test(w http.ResponseWriter, r *http.Request) {
   query := r.URL.Query()
   id := strings.Join(query["id"], "")
-  type Record struct {
-    Start string `json: "start"`
-    End string `json: "end"`
-  }
 
   rows, err := db.Query("select start_time, end_time from records where user_id = ?", id)
   if err != nil { panic(err) }
@@ -80,6 +124,7 @@ func main() {
 
   http.HandleFunc("/test", test)
   http.HandleFunc("/register", register)
+  http.HandleFunc("/login", login)
 
   if err = http.ListenAndServe(":8080", nil); err != nil {
     panic(err)
