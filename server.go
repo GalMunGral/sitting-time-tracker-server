@@ -4,12 +4,8 @@ import (
   "net/http"
   "fmt"
   "context"
-  // "reflect"
-  "strings"
-  "encoding/json"
   "database/sql"
   _ "github.com/go-sql-driver/mysql"
-  jwt "github.com/dgrijalva/jwt-go"
 )
 
 var db *sql.DB
@@ -18,119 +14,6 @@ var ctx = context.Background()
 type Record struct {
   Start string `json: "start"`
   End string `json: "end"`
-}
-
-// Expects `uid` and `password` from request body
-// Sends back generated JWT token
-func login(w http.ResponseWriter, r *http.Request) {
-  var buffer [255]byte
-  var body map[string]interface{}
-  len, _ := r.Body.Read(buffer[:])
-  if err:= json.Unmarshal(buffer[:len], &body); err != nil {
-    panic(err)
-  }
-  uid := int(body["uid"].(float64))
-  password, ok := body["password"].(string)
-  if !ok {
-    w.Write([]byte("No password"))
-    return
-  }
-  stmt, err := db.PrepareContext(ctx, "SELECT * FROM users WHERE uid = ? AND password = ?")
-  if err != nil {
-    panic(err)
-  }
-  rows, err := stmt.Query(uid, password)
-  if err != nil {
-    msg := map[string]interface{} {
-      "success": false,
-      "error": err.Error(),
-    }
-    ob, _ := json.Marshal(msg)
-    w.Write(ob)
-    return
-  }
-  if !rows.Next() {
-    msg := map[string]interface{} {
-      "success": false,
-      "error": "Invalid Credentials",
-    }
-    ob, _ := json.Marshal(msg)
-    w.Write(ob)
-    return
-  }
-  // Create JWT token
-  fmt.Println("uid >> ", uid)
-  token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-    "uid": uid,
-    "test": "something",
-  })
-  str, err := token.SignedString([]byte("test-test"))
-  w.Write([]byte(str))
-}
-
-func register(w http.ResponseWriter, r *http.Request) {
-  var buffer [255]byte
-  var body map[string]interface{}
-  len, _ := r.Body.Read(buffer[:])
-  if err:= json.Unmarshal(buffer[:len], &body); err != nil {
-    panic(err)
-  }
-  uid := int(body["uid"].(float64))
-  fmt.Println("uid <-", uid)
-  password, ok := body["password"].(string)
-  if !ok {
-    w.Write([]byte("No password"))
-    return
-  }
-  stmt, err := db.PrepareContext(ctx, "INSERT INTO users(uid, password) VALUES(?, ?)")
-  if err != nil {
-    panic(err)
-  }
-  defer stmt.Close()
-  if _, err := stmt.Exec(uid, password); err != nil {
-    msg := map[string]interface{} {
-      "success": false,
-      "error": err.Error(),
-    }
-    ob, _ := json.Marshal(msg)
-    w.Write(ob)
-    return
-  }
-  w.Write([]byte("Success!"))
-}
-
-func verifyToken(w http.ResponseWriter, r *http.Request) {
-  query := r.URL.Query()
-  tokenString := strings.Join(query["token"], "")
-  token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-    return []byte("test-test"), nil
-  })
-  if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-    uid := int(claims["uid"].(float64))
-    fmt.Println("VERIFIED: ", uid)
-  }
-}
-
-func test(w http.ResponseWriter, r *http.Request) {
-  query := r.URL.Query()
-  id := strings.Join(query["id"], "")
-
-  rows, err := db.Query("select start_time, end_time from records where user_id = ?", id)
-  if err != nil { panic(err) }
-  defer rows.Close()
-
-  var records []Record
-  var start string
-  var end string
-  for rows.Next() {
-  	if err := rows.Scan(&start, &end); err != nil { panic(err) }
-    records = append(records, Record{Start: start, End: end})
-  }
-  if rows.Err() != nil { panic(err) }
-
-  ob, err := json.Marshal(records)
-  if err != nil { panic(err) }
-  w.Write(ob)
 }
 
 func main() {
