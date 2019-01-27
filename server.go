@@ -3,6 +3,8 @@ package main
 import (
   "net/http"
   "fmt"
+  "context"
+  // "reflect"
   "strings"
   "encoding/json"
   "database/sql"
@@ -10,7 +12,37 @@ import (
 )
 
 var db *sql.DB
+var ctx = context.Background()
 
+func register(w http.ResponseWriter, r *http.Request) {
+  var buffer [255]byte
+  var body map[string]interface{}
+  len, _ := r.Body.Read(buffer[:])
+  if err:= json.Unmarshal(buffer[:len], &body); err != nil {
+    panic(err)
+  }
+  uid := int(body["uid"].(float64))
+  password, ok := body["password"].(string)
+  if !ok {
+    w.Write([]byte("No password"))
+    return
+  }
+  stmt, err := db.PrepareContext(ctx, "INSERT INTO users(uid, password) VALUES(?, ?)")
+  if err != nil {
+    panic(err)
+  }
+  defer stmt.Close()
+  if _, err := stmt.Exec(uid, password); err != nil {
+    msg := map[string]interface{} {
+      "success": false,
+      "error": err.Error(),
+    }
+    ob, _ := json.Marshal(msg)
+    w.Write(ob)
+    return
+  }
+  w.Write([]byte("Success!"))
+}
 func test(w http.ResponseWriter, r *http.Request) {
   query := r.URL.Query()
   id := strings.Join(query["id"], "")
@@ -47,6 +79,7 @@ func main() {
   defer db.Close()
 
   http.HandleFunc("/test", test)
+  http.HandleFunc("/register", register)
 
   if err = http.ListenAndServe(":8080", nil); err != nil {
     panic(err)
