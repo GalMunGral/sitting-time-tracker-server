@@ -2,7 +2,6 @@ package main
 
 import (
   "net/http"
-  "fmt"
   "encoding/json"
   jwt "github.com/dgrijalva/jwt-go"
 )
@@ -10,6 +9,9 @@ import (
 // Expects `uid` and `password` from request body
 // Sends back generated JWT token
 func login(w http.ResponseWriter, r *http.Request) {
+  if (r.Method != "POST") {
+    return
+  }
   var buffer [255]byte
   var body map[string]interface{}
   len, _ := r.Body.Read(buffer[:])
@@ -46,7 +48,6 @@ func login(w http.ResponseWriter, r *http.Request) {
     return
   }
   // Create JWT token
-  fmt.Println("uid >> ", uid)
   token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
     "uid": uid,
     "test": "something",

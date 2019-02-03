@@ -2,12 +2,15 @@ package main
 
 import (
   "net/http"
-  "fmt"
   "encoding/json"
+  jwt "github.com/dgrijalva/jwt-go"
   _ "github.com/go-sql-driver/mysql"
 )
 
 func register(w http.ResponseWriter, r *http.Request) {
+  if (r.Method != "POST") {
+    return
+  }
   var buffer [255]byte
   var body map[string]interface{}
   len, _ := r.Body.Read(buffer[:])
@@ -15,7 +18,6 @@ func register(w http.ResponseWriter, r *http.Request) {
     panic(err)
   }
   uid := int(body["uid"].(float64))
-  fmt.Println("uid <-", uid)
   password, ok := body["password"].(string)
   if !ok {
     w.Write([]byte("No password"))
@@ -35,5 +37,10 @@ func register(w http.ResponseWriter, r *http.Request) {
     w.Write(ob)
     return
   }
-  w.Write([]byte("Success!"))
+  token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+    "uid": uid,
+    "test": "something",
+  })
+  str, err := token.SignedString([]byte("test-test"))
+  w.Write([]byte(str))
 }
