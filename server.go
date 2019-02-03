@@ -34,7 +34,6 @@ func main() {
 
   http.HandleFunc("/register", register)
   http.HandleFunc("/login", login)
-  http.HandleFunc("/verify-token", verifyToken)
   http.HandleFunc("/record", record)
 
   if err = http.ListenAndServe(":8080", nil); err != nil {
