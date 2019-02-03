@@ -2,6 +2,7 @@ package main
 
 import (
   "net/http"
+  "encoding/json"
   "fmt"
   "context"
   "database/sql"
@@ -10,10 +11,16 @@ import (
 
 var db *sql.DB
 var ctx = context.Background()
+var SECRET = "you-are-retarded"
+
+type User struct {
+  Username, Password string
+}
 
 type Record struct {
-  Start string `json: "start"`
-  End string `json: "end"`
+  Uid int `json:"uid"`
+  Start string  `json:"start"`
+  End string `json:"end"`
 }
 
 func main() {
@@ -25,12 +32,28 @@ func main() {
   }
   defer db.Close()
 
-  http.HandleFunc("/test", test)
   http.HandleFunc("/register", register)
   http.HandleFunc("/login", login)
   http.HandleFunc("/verify-token", verifyToken)
+  http.HandleFunc("/record", record)
 
   if err = http.ListenAndServe(":8080", nil); err != nil {
     panic(err)
   }
+}
+
+func sendConfirmation(w http.ResponseWriter) {
+    msg, _ := json.Marshal(map[string]interface{} {
+      "success": true,
+    })
+    w.Write(msg)
+}
+
+func sendError(w http.ResponseWriter, status int, errString string) {
+    msg, _ := json.Marshal(map[string]interface{} {
+      "success": false,
+      "error": errString,
+    })
+    w.WriteHeader(status)
+    w.Write(msg)
 }

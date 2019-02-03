@@ -1,6 +1,7 @@
 package main
 
 import (
+  // "fmt"
   "net/http"
   "encoding/json"
   jwt "github.com/dgrijalva/jwt-go"
@@ -8,39 +9,34 @@ import (
 )
 
 func register(w http.ResponseWriter, r *http.Request) {
+  w.Header().Set("Content-Type", "application/json")
+
+  var user User
   if (r.Method != "POST") {
+    w.WriteHeader(405)
     return
   }
-  var buffer [255]byte
-  var body map[string]interface{}
-  len, _ := r.Body.Read(buffer[:])
-  if err:= json.Unmarshal(buffer[:len], &body); err != nil {
-    panic(err)
-  }
-  uid := int(body["uid"].(float64))
-  password, ok := body["password"].(string)
-  if !ok {
-    w.Write([]byte("No password"))
+
+  dec := json.NewDecoder(r.Body)
+  if err:= dec.Decode(&user); err != nil {
+    sendError(w, 409, err.Error())
     return
   }
-  stmt, err := db.PrepareContext(ctx, "INSERT INTO users(uid, password) VALUES(?, ?)")
-  if err != nil {
-    panic(err)
-  }
+
+  stmt, _ := db.PrepareContext(ctx, "INSERT INTO users(username, password) VALUES(?, ?)")
   defer stmt.Close()
-  if _, err := stmt.Exec(uid, password); err != nil {
-    msg := map[string]interface{} {
-      "success": false,
-      "error": err.Error(),
-    }
-    ob, _ := json.Marshal(msg)
-    w.Write(ob)
+  result, err := stmt.Exec(user.Username, user.Password)
+  if err != nil {
+    sendError(w, 409, err.Error())
     return
   }
+  uid, _ := result.LastInsertId()
   token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
     "uid": uid,
-    "test": "something",
   })
-  str, err := token.SignedString([]byte("test-test"))
-  w.Write([]byte(str))
+  str, _ := token.SignedString([]byte(SECRET))
+  ob, _ := json.Marshal(map[string]interface{} {
+    "token": str,
+  }) 
+  w.Write(ob)
 }
