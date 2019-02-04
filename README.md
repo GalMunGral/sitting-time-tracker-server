@@ -1,3 +1,3 @@
-Run `source init.sql` in MySQL client to cretae DB.
+Use `source init.sql` to configure database.
 
 Run `go build -o [output]` to compile.
