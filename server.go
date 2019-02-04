@@ -35,6 +35,7 @@ func main() {
   http.HandleFunc("/register", register)
   http.HandleFunc("/login", login)
   http.HandleFunc("/record", record)
+  http.Handle("/", http.FileServer(http.Dir("./public")))
 
   if err = http.ListenAndServe(":8080", nil); err != nil {
     panic(err)
