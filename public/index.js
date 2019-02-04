@@ -60,7 +60,6 @@ function draw(records) {
     .attr('width', vw / 24 - 2)
     // .attr('fill', d => `hsl(120, 10%, ${Math.min(1 - d.value/60, 1) * 100}%)`)
     .attr('fill', d => {
-      d3.select('body').append('p').text('new: '+ hslToRgb(0.333, 0.1, Math.max(1 - d.value/60, 0)))
       return hslToRgb(0.333, 0.1, Math.min(1 - d.value/60, 1))
     })
 }
