@@ -55,12 +55,13 @@ function draw(records) {
     // .attr('height', `calc(100vw/24 - 2)`)
     // .attr('width', `calc(100vw/24 - 2)`)
     .attr('y', d => (Math.floor(d.key/24) - Math.floor(startHour/24)) * vw / 24 + 1)
-    .attr('x', d => (d.key % 24) * vw / 24 + 1)
+    .attr('x', d => ((d.key - startHour) % 24) * vw / 24 + 1)
     .attr('height', vw / 24 - 2)
     .attr('width', vw / 24 - 2)
     // .attr('fill', d => `hsl(120, 10%, ${Math.min(1 - d.value/60, 1) * 100}%)`)
     .attr('fill', d => {
-      return hslToRgb(0.333, 0.1, Math.min(1 - d.value/60, 1))
+      return hslToRgb(0.333, 0.1, Math.max(1 - d.value/60, 0))
+      // return 'black'
     })
 }
 

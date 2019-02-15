@@ -25,7 +25,9 @@ type Record struct {
 
 func main() {
   var err error
-  db, err = sql.Open("mysql", "root@tcp(127.0.0.1:3306)/sitting_time_tracker")
+  // db, err = sql.Open("mysql", "root@tcp(127.0.0.1:3306)/sitting_time_tracker")
+  db, err = sql.Open("mysql", "b9612c211f012c:6b9351b7@tcp(us-cdbr-iron-east-03.cleardb.net:3306)/heroku_dcd5cc19df4dc0e")
+
   if err != nil { panic(err) }
   if err = db.Ping(); err == nil {
     fmt.Printf("Database Connected!\n")

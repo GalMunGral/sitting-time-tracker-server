@@ -15,3 +15,5 @@ create table if not exists records(
     references users(uid)
     on delete cascade
 );
+
+# mysql://b9612c211f012c:6b9351b7@us-cdbr-iron-east-03.cleardb.net/heroku_dcd5cc19df4dc0e?reconnect=true
