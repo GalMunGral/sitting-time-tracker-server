@@ -1,4 +1,5 @@
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjEwMDAwMDAwNDN9.LoExk2fFjiHABU6eKqW4af8KDDxt6RB8FQpkFhy1JAI';
+// TEST TOKEN
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjEwMDAwMDAwMDJ9.mFDbR_B_Ehm7c6Tqreb3W6q-yLU6xWD_YKpe2wk8ZdY'
 
 d3.json(`/record?token=${token}`)
   .then(d => d.results.map(r => ({
