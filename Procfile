@@ -1,1 +1,1 @@
-web: ls && sitting-time-tracker-server
+web: $GOPATH/bin/sitting-time-tracker-server
