@@ -2,6 +2,7 @@ package main
 
 import (
   "net/http"
+  "os"
   "encoding/json"
   "fmt"
   "context"
@@ -39,7 +40,7 @@ func main() {
   http.HandleFunc("/record", record)
   http.Handle("/", http.FileServer(http.Dir("./public")))
 
-  if err = http.ListenAndServe(":8080", nil); err != nil {
+  if err = http.ListenAndServe(":" + os.Getenv("PORT"), nil); err != nil {
     panic(err)
   }
 }
