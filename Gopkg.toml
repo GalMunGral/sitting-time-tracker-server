@@ -21,7 +21,8 @@
 #  version = "2.4.0"
 
 [metadata.heroku]
-  root-package = "main"
+  root-package = "sitting-time-tracker-server"
+  install = ["./..."]
 
 [[constraint]]
   name = "github.com/dgrijalva/jwt-go"

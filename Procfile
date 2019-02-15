@@ -1,1 +1,1 @@
-web: $GOPATH/sitting-time-tracker-server
+web: sitting-time-tracker-server
