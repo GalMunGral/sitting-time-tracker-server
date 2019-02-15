@@ -1,0 +1,1 @@
+web: sitting-time-tracker-server
