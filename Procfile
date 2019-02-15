@@ -1,0 +1,1 @@
+web: ls && sitting-time-tracker-server
